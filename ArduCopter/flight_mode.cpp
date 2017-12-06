@@ -9,13 +9,19 @@
 // optional force parameter used to force the flight mode change (used only first time mode is set)
 // returns true if mode was successfully set
 // ACRO, STABILIZE, ALTHOLD, LAND, DRIFT and SPORT can always be set successfully but the return state of other flight modes should be checked and the caller should deal with failures appropriately
+/*
+ * set_mode - 改变飞行模式，并执行任何必要的初始化可选强制参数，用于强制飞行模式改变（仅用于第一次模式设置）如果模式设置成功，则返回true
+ * ACRO，STABILIZE，ALTHOLD，LAND，DRIFT和SPORT总是可以设置成功，但应检查其他飞行模式的返航状态，主叫方应适当处理故障
+ */
 bool Copter::set_mode(control_mode_t mode, mode_reason_t reason)
 {
     // boolean to record if flight mode could be set
     bool success = false;
     bool ignore_checks = !motors->armed();   // allow switching to any mode if disarmed.  We rely on the arming check to perform
+                                             //在加锁模式下可以切换到任何模式
 
     // return immediately if we are already in the desired mode
+    // 如果当前模式已经是要切换的模式则立即返回true
     if (mode == control_mode) {
         prev_control_mode = control_mode;
         prev_control_mode_reason = control_mode_reason;
@@ -108,6 +114,9 @@ bool Copter::set_mode(control_mode_t mode, mode_reason_t reason)
         case GUIDED_NOGPS:
             success = guided_nogps_init(ignore_checks);
             break;
+        case MOOR:  //添加系留模式
+            success = moor_init(ignore_checks);
+            break;
 
         default:
             success = false;
@@ -115,8 +124,10 @@ bool Copter::set_mode(control_mode_t mode, mode_reason_t reason)
     }
 
     // update flight mode
+    // 更新飞行模式
     if (success) {
         // perform any cleanup required by previous flight mode
+        // 执行先前飞行模式的清理工作
         exit_mode(control_mode, mode);
         
         prev_control_mode = control_mode;
@@ -245,7 +256,9 @@ void Copter::update_flight_mode()
         case GUIDED_NOGPS:
             guided_nogps_run();
             break;
-
+        case MOOR:
+            moor_run();
+            break;
         default:
             break;
     }
@@ -313,6 +326,7 @@ bool Copter::mode_requires_GPS(control_mode_t mode)
         case BRAKE:
         case AVOID_ADSB:
         case THROW:
+        case MOOR:
             return true;
         default:
             return false;
@@ -325,6 +339,7 @@ bool Copter::mode_has_manual_throttle(control_mode_t mode)
     switch (mode) {
         case ACRO:
         case STABILIZE:
+        case MOOR:
             return true;
         default:
             return false;
@@ -418,6 +433,9 @@ void Copter::notify_flight_mode(control_mode_t mode)
             break;
         case GUIDED_NOGPS:
             notify.set_flight_mode_str("GNGP");
+            break;
+        case MOOR:
+            notify.set_flight_mode_str("MOOR");
             break;
         default:
             notify.set_flight_mode_str("----");

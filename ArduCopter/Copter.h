@@ -438,6 +438,13 @@ private:
         uint32_t free_fall_start_ms;    // system time free fall was detected
         float free_fall_start_velz;     // vertical velocity when free fall was detected
     } throw_state = {Throw_Disarmed, Throw_Disarmed, 0, false, 0, 0.0f};
+    // Moor mode state
+    // ϵ��ģʽ״̬
+    struct{
+        MoorModeStage stage;
+        MoorModeStage prev_stage;
+        uint32_t last_log_ms;
+    } moor_state={Moor_Disarmed,Moor_Disarmed,0};
 
     // Battery Sensors
     AP_BattMonitor battery;
@@ -900,6 +907,17 @@ private:
     void set_precision_loiter_enabled(bool value) { _precision_loiter_enabled = value; }
     bool _precision_loiter_enabled;
 #endif
+
+    //add moor mode func
+    bool moor_init(bool ignore_checks);
+    void moor_run();
+    bool do_precision_moor();
+    void precision_moor_xy();
+    void set_precision_moor_enabled(bool value) { _precision_loiter_enabled = value; }
+    bool _precision_moor_enabled;
+    //moor mode func end
+
+
     bool poshold_init(bool ignore_checks);
     void poshold_run();
     void poshold_update_pilot_lean_angle(float &lean_angle_filtered, float &lean_angle_raw);

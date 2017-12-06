@@ -12,22 +12,25 @@ bool Copter::land_init(bool ignore_checks)
     land_with_gps = position_ok();
     if (land_with_gps) {
         // set target to stopping point
+        // 设置停止的坐标点
         Vector3f stopping_point;
         wp_nav->get_loiter_stopping_point_xy(stopping_point);
         wp_nav->init_loiter_target(stopping_point);
     }
 
     // initialize vertical speeds and leash lengths
+    // 初始化垂直速度和加速度
     pos_control->set_speed_z(wp_nav->get_speed_down(), wp_nav->get_speed_up());
     pos_control->set_accel_z(wp_nav->get_accel_z());
 
     // initialise position and desired velocity
+    // 初始化坐标点和期望的速度
     if (!pos_control->is_active_z()) {
-        pos_control->set_alt_target_to_current_alt();
+        pos_control->set_alt_target_to_current_alt();//设置目标高度为当前高度，降落模式当中停留等待的高度为当前高度
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
     
-    land_start_time = millis();
+    land_start_time = millis(); //设置当前的时间，降落模式当中需要悬停等待一段时间才开始下降
 
     land_pause = false;
 
@@ -51,6 +54,9 @@ void Copter::land_run()
 // land_run - runs the land controller
 //      horizontal position controlled with loiter controller
 //      should be called at 100hz or more
+// GPS模式下的降落模式
+// 水平坐标点控制模式采用留待控制模式
+// 刷新率在100hz或更高
 void Copter::land_gps_run()
 {
     // if not auto armed or landed or motor interlock not enabled set throttle to zero and exit immediately
@@ -77,39 +83,50 @@ void Copter::land_gps_run()
     motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
     
     // pause before beginning land descent
+    // 超过等待时间后，land_pause设置为FALSE，飞控开始控制无人机下降
     if(land_pause && millis()-land_start_time >= LAND_WITH_DELAY_MS) {
         land_pause = false;
     }
-    
+    //水平控制
     land_run_horizontal_control();
+    //垂直控制
     land_run_vertical_control(land_pause);
 }
 
 // land_nogps_run - runs the land controller
 //      pilot controls roll and pitch angles
 //      should be called at 100hz or more
+// 非GPS模式下的降落模式
+// 飞控仅控制抚养和滚转角
+// 刷新率为100hz或更高
 void Copter::land_nogps_run()
 {
     float target_roll = 0.0f, target_pitch = 0.0f;
     float target_yaw_rate = 0;
 
     // process pilot inputs
+    // 检测输入信号
     if (!failsafe.radio) {
+        //重新捕获遥控器信号后
         if ((g.throttle_behavior & THR_BEHAVE_HIGH_THROTTLE_CANCELS_LAND) != 0 && rc_throttle_control_in_filter.get() > LAND_CANCEL_TRIGGER_THR){
             Log_Write_Event(DATA_LAND_CANCELLED_BY_PILOT);
             // exit land if throttle is high
+            //退出悬停模式并将飞行模式设置为定高模式
             set_mode(ALT_HOLD, MODE_REASON_THROTTLE_LAND_ESCAPE);
         }
 
         if (g.land_repositioning) {
             // apply SIMPLE mode transform to pilot inputs
+            // 简单模式
             update_simple_mode();
 
             // get pilot desired lean angles
+            // 控制俯仰和滚转角
             get_pilot_desired_lean_angles(channel_roll->get_control_in(), channel_pitch->get_control_in(), target_roll, target_pitch, aparm.angle_max);
         }
 
         // get pilot's desired yaw rate
+        // 控制航向角速率
         target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
     }
 
@@ -148,14 +165,15 @@ void Copter::land_nogps_run()
 
 /*
   get a height above ground estimate for landing
+  获得相对高度
  */
 int32_t Copter::land_get_alt_above_ground(void)
 {
     int32_t alt_above_ground;
-    if (rangefinder_alt_ok()) {
-        alt_above_ground = rangefinder_state.alt_cm_filt.get();
+    if (rangefinder_alt_ok()) { //声纳等高度表有效
+        alt_above_ground = rangefinder_state.alt_cm_filt.get();//获得高度值
     } else {
-        bool navigating = pos_control->is_active_xy();
+        bool navigating = pos_control->is_active_xy(); //返回XY控制器状态
         if (!navigating || !current_loc.get_alt_cm(Location_Class::ALT_FRAME_ABOVE_TERRAIN, alt_above_ground)) {
             alt_above_ground = current_loc.alt;
         }
@@ -302,6 +320,10 @@ void Copter::land_run_horizontal_control()
 // land_do_not_use_GPS - forces land-mode to not use the GPS but instead rely on pilot input for roll and pitch
 //  called during GPS failsafe to ensure that if we were already in LAND mode that we do not use the GPS
 //  has no effect if we are not already in LAND mode
+/*
+ * 强制着陆模式不适用GPS,在GPS故障的情况下依靠调用俯仰和滚转输入来控制飞机,
+ * 以确保我们在着陆模式下不使用GPS
+ */
 void Copter::land_do_not_use_GPS()
 {
     land_with_gps = false;
@@ -309,6 +331,7 @@ void Copter::land_do_not_use_GPS()
 
 // set_mode_land_with_pause - sets mode to LAND and triggers 4 second delay before descent starts
 //  this is always called from a failsafe so we trigger notification to pilot
+// 在故障保护中调用着陆模式时，设置飞行模式为着陆模式，并出发4秒的延时等待
 void Copter::set_mode_land_with_pause(mode_reason_t reason)
 {
     set_mode(LAND, reason);
@@ -319,6 +342,7 @@ void Copter::set_mode_land_with_pause(mode_reason_t reason)
 }
 
 // landing_with_GPS - returns true if vehicle is landing using GPS
+// 在设置飞行模式为着陆模式时如果此时飞控处于GPS有效状态，则返回True
 bool Copter::landing_with_GPS() {
     return (control_mode == LAND && land_with_gps);
 }

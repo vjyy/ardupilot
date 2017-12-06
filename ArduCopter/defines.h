@@ -104,6 +104,7 @@ enum control_mode_t {
     THROW =        18,  // throw to launch mode using inertial/GPS system, no pilot input
     AVOID_ADSB =   19,  // automatic avoidance of obstacles in the macro scale - e.g. full-sized aircraft
     GUIDED_NOGPS = 20,  // guided mode but only accepts attitude and altitude
+    MOOR = 30,
 };
 
 enum mode_reason_t {
@@ -261,6 +262,14 @@ enum ThrowModeStage {
     Throw_Uprighting,
     Throw_HgtStabilise,
     Throw_PosHold
+};
+//Moor stages
+enum MoorModeStage{
+    Moor_Disarmed,      //½âËø
+    Moor_Detecting,     //¼ì²â
+    Moor_PosHold,       //ÐüÍ£
+    Moor_TakeOff,       //Æð·É
+    Moor_Land           //½µÂä
 };
 
 // Throw types
