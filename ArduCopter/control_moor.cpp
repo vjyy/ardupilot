@@ -213,8 +213,8 @@ void Copter::moor_run()
 
     case Loiter_Landed:
         // set motors to spin-when-armed if throttle below deadzone, otherwise full range (but motors will only spin at min throttle)
-        /*if (target_climb_rate < 0.0f) {
-            motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
+        if (target_climb_rate < 0.0f) {
+            //motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
         } else {
             motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
         }
@@ -224,8 +224,7 @@ void Copter::moor_run()
         attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(0, 0, 0, get_smoothing_gain());
         //pos_control->relax_alt_hold_controllers(0.0f);   // forces throttle output to go to zero
         //pos_control->update_z_controller();
-         *
-         */
+
         break;
     case Loiter_Flying:
         // set motors to full range
