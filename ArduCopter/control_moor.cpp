@@ -165,7 +165,8 @@ void Copter::moor_run()
 
     case Loiter_MotorStopped:
 
-        motors->set_desired_spool_state(AP_Motors::DESIRED_SHUT_DOWN);
+        //油门过低导致电机锁定????
+        //motors->set_desired_spool_state(AP_Motors::DESIRED_SHUT_DOWN);
 #if FRAME_CONFIG == HELI_FRAME
         // force descent rate and call position controller
         //pos_control->set_alt_target_from_climb_rate(-abs(g.land_speed), G_Dt, false);

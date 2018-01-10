@@ -13,24 +13,28 @@ void Copter::crash_check()
     static uint16_t crash_counter;  // number of iterations vehicle may have been crashed
 
     // return immediately if disarmed, or crash checking disabled
+    //如果解锁或碰撞检测关闭立即返回
     if (!motors->armed() || ap.land_complete || g.fs_crash_check == 0) {
         crash_counter = 0;
         return;
     }
 
     // return immediately if we are not in an angle stabilize flight mode or we are flipping
-    if (control_mode == ACRO || control_mode == FLIP) {
+    //如果是运动模式或翻滚模式立即返回
+    if (control_mode == ACRO || control_mode == FLIP||control_mode == MOOR) {
         crash_counter = 0;
         return;
     }
 
     // vehicle not crashed if 1hz filtered acceleration is more than 3m/s (1G on Z-axis has been subtracted)
+    //如果经过1hz过滤后加速度大于3m/s(z轴上已经减去1G)则认为没有碰撞
     if (land_accel_ef_filter.get().length() >= CRASH_CHECK_ACCEL_MAX) {
         crash_counter = 0;
         return;
     }
 
     // check for angle error over 30 degrees
+    // 检测到角度错误小于30度
     const float angle_error = attitude_control->get_att_error_angle_deg();
     if (angle_error <= CRASH_CHECK_ANGLE_DEVIATION_DEG) {
         crash_counter = 0;
@@ -38,6 +42,7 @@ void Copter::crash_check()
     }
 
     // we may be crashing
+    // 碰撞错误计数
     crash_counter++;
 
     // check if crashing for 2 seconds
