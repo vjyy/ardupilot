@@ -104,7 +104,8 @@ enum control_mode_t {
     THROW =        18,  // throw to launch mode using inertial/GPS system, no pilot input
     AVOID_ADSB =   19,  // automatic avoidance of obstacles in the macro scale - e.g. full-sized aircraft
     GUIDED_NOGPS = 20,  // guided mode but only accepts attitude and altitude
-    MOOR = 30,
+    MOOR = 30,  //GPS系留模式
+    MOOR_NoGPS=31,  //无GPS系留模式
 };
 
 enum mode_reason_t {

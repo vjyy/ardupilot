@@ -367,7 +367,7 @@ public:
         k_param_DataFlash = 253, // 253 - Logging Group
 
         // 254,255: reserved
-
+        k_param_moordraw = 260,
         // the k_param_* space is 9-bits in size
         // 511: reserved
     };

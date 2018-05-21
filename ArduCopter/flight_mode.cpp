@@ -117,6 +117,9 @@ bool Copter::set_mode(control_mode_t mode, mode_reason_t reason)
         case MOOR:  //添加系留模式
             success = moor_init(ignore_checks);
             break;
+        case MOOR_NoGPS:  //添加系留模式
+            success = moor_nogps_init(ignore_checks);
+            break;
 
         default:
             success = false;
@@ -259,6 +262,9 @@ void Copter::update_flight_mode()
         case MOOR:
             moor_run();
             break;
+        case MOOR_NoGPS:
+            moor_nogps_run();
+            break;
         default:
             break;
     }
@@ -340,6 +346,7 @@ bool Copter::mode_has_manual_throttle(control_mode_t mode)
         case ACRO:
         case STABILIZE:
         case MOOR:
+        case MOOR_NoGPS:
             return true;
         default:
             return false;
@@ -436,6 +443,9 @@ void Copter::notify_flight_mode(control_mode_t mode)
             break;
         case MOOR:
             notify.set_flight_mode_str("MOOR");
+            break;
+        case MOOR_NoGPS:
+            notify.set_flight_mode_str("MOOR_NoGPS");
             break;
         default:
             notify.set_flight_mode_str("----");

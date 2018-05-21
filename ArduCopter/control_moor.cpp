@@ -22,11 +22,16 @@
  * 三、增加线重补偿比例值
  *     线每上升10米高度所需的油门补偿值或拉力补偿值
  */
+static bool moor_with_gps;//GPS定位精度是否满足要求
+static bool run_with_gps;//是否以GPS模式运行
 bool Copter::moor_init(bool ignore_checks)
 {
+    moor_with_gps=position_ok();
+    run_with_gps=false;
 #if FRAME_CONFIG == HELI_FRAME
     // do not allow helis to enter Loiter if the Rotor Runup is not complete
-    if (!ignore_checks && !motors->rotor_runup_complete()){
+    if (motors->armed() && ap.land_complete && !mode_has_manual_throttle(control_mode) &&
+            (get_pilot_desired_throttle(channel_throttle->get_control_in()) > get_non_takeoff_throttle())) {
         return false;
     }
 #endif
@@ -43,7 +48,6 @@ bool Copter::moor_init(bool ignore_checks)
     //设定飞行模式前强制检测GPS定位状态，如果不能定位则返回错误
     //
     if (position_ok() || ignore_checks) {
-
         // set target to current position
         wp_nav->init_loiter_target();
 
@@ -56,12 +60,9 @@ bool Copter::moor_init(bool ignore_checks)
             pos_control->set_alt_target_to_current_alt();
             pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
         }*/
-        pos_control->set_alt_target(0);//高度目标设置为0
-
-        return true;
-    }else{
-        return false;
     }
+    pos_control->set_alt_target(0);//高度目标设置为0
+    return true;
 }
 
 #if PRECISION_LANDING == ENABLED
@@ -103,7 +104,33 @@ void Copter::precision_moor_xy()
 
 // loiter_run - runs the loiter controller
 // should be called at 100hz or more
-void Copter::moor_run()
+int32_t Copter::moor_get_alt_above_ground(void)
+{
+    int32_t alt_above_ground;
+    if (rangefinder_alt_ok()) { //声纳等高度表有效
+        alt_above_ground = rangefinder_state.alt_cm_filt.get();//获得高度值
+    } else {
+        bool navigating = pos_control->is_active_xy(); //返回XY控制器状态
+        if (!navigating || !current_loc.get_alt_cm(Location_Class::ALT_FRAME_ABOVE_TERRAIN, alt_above_ground)) {
+            alt_above_ground = current_loc.alt;
+        }
+    }
+    return alt_above_ground;
+}
+void Copter::check_moor_mode(){
+    int32_t moor_alt=moor_get_alt_above_ground();
+    if((!moor_with_gps&&moor_with_gps!=position_ok()) ||moor_alt<300){
+        set_mode(MOOR_NoGPS,MODE_REASON_UNKNOWN);
+    }
+}
+
+
+void Copter::moor_run(){
+    check_moor_mode();
+    moor_run_GPS();
+}
+
+void Copter::moor_run_GPS()
 {
     LoiterModeState loiter_state;
     float target_yaw_rate = 0.0f;

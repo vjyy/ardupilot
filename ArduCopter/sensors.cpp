@@ -83,7 +83,26 @@ bool Copter::rangefinder_alt_ok()
 {
     return (rangefinder_state.enabled && rangefinder_state.alt_healthy);
 }
+/*
+ * MoorDraw sensors
+ *
+ * */
+void Copter::init_moordraw(void){
+#if MOORDRAW_ENABLED == ENABLED
+    moordraw.init();
+#endif
+}
 
+void Copter::read_moordraw(void){
+#if MOORDRAW_ENABLED == ENABLED
+    moordraw.update();
+#else
+    //moordraw.
+#endif
+}
+bool Copter::moordraw_ok(){
+    return false;
+}
 /*
   update RPM sensors
  */

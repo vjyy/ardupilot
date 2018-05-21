@@ -811,6 +811,11 @@ const AP_Param::Info Copter::var_info[] = {
     // @Path: ../libraries/AP_RangeFinder/RangeFinder.cpp
     GOBJECT(rangefinder,   "RNGFND", RangeFinder),
 #endif
+# if MOORDRAW_ENABLED == ENABLED
+    // @Group: MOORDRAW
+    // @Path: ../libraries/AP_MoorDraw/MoorDraw.cpp
+    GOBJECT(moordraw, "MOORDRAW" , MoorDraw),
+#endif
 
 #if AP_TERRAIN_AVAILABLE && AC_TERRAIN
     // @Group: TERRAIN_

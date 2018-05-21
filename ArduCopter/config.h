@@ -119,6 +119,12 @@
 #ifndef RANGEFINDER_GLITCH_NUM_SAMPLES
  # define RANGEFINDER_GLITCH_NUM_SAMPLES  3   // number of rangefinder glitches in a row to take new reading
 #endif
+//////////////////////////////////////////////////////////////////////////////
+// Moor Sensor
+//
+#ifndef MOORDRAW_ENABLED
+ #define MOORDRAW_ENABLED ENABLED
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // Proximity sensor

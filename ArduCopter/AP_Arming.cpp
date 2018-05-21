@@ -728,6 +728,7 @@ bool AP_Arming_Copter::arm_checks(bool display_failure, bool arming_from_gcs)
     }
 
     // check if safety switch has been pushed
+    //如果安全开关没有打开返回警告
     if (hal.util->safety_switch_state() == AP_HAL::Util::SAFETY_DISARMED) {
         if (display_failure) {
             gcs().send_text(MAV_SEVERITY_CRITICAL,"Arm: Safety Switch");

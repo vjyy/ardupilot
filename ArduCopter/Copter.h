@@ -92,7 +92,7 @@
 #include <AP_Button/AP_Button.h>
 #include <AP_Arming/AP_Arming.h>
 #include <AP_VisualOdom/AP_VisualOdom.h>
-
+#include <AP_Moor/AP_MoorDraw.h>
 // Configuration
 #include "defines.h"
 #include "config.h"
@@ -197,7 +197,7 @@ private:
     AP_Baro barometer;
     Compass compass;
     AP_InertialSensor ins;
-
+    MoorDraw moordraw;
     RangeFinder rangefinder {serial_manager, ROTATION_PITCH_270};
     struct {
         bool enabled:1;
@@ -913,9 +913,16 @@ private:
     void moor_run();
     bool do_precision_moor();
     void precision_moor_xy();
+    void check_moor_mode();
+    void moor_run_GPS();
+    int32_t moor_get_alt_above_ground();
     void set_precision_moor_enabled(bool value) { _precision_loiter_enabled = value; }
     bool _precision_moor_enabled;
     //moor mode func end
+    //add moor_nogps mode func
+    bool moor_nogps_init(bool ignore_checks);
+    void moor_nogps_run();
+    //moor_nogps mode func end
 
 
     bool poshold_init(bool ignore_checks);
@@ -1056,6 +1063,9 @@ private:
     void init_rangefinder(void);
     void read_rangefinder(void);
     bool rangefinder_alt_ok();
+    void init_moordraw(void);
+    void read_moordraw(void);
+    bool moordraw_ok();
     void init_compass();
     void init_optflow();
     void update_optical_flow(void);

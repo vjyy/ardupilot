@@ -159,7 +159,6 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
     SCHED_TASK(stats_update,           1,    100),
 };
 
-
 void Copter::setup() 
 {
     // Load the default values of variables listed in var_info[]s
@@ -176,6 +175,7 @@ void Copter::setup()
     // setup initial performance counters
     perf_info_reset();
     fast_loopTimer = AP_HAL::micros();
+
 }
 
 /*
@@ -497,6 +497,8 @@ void Copter::one_hz_loop()
     // indicates that the sensor or subsystem is present but not
     // functioning correctly
     update_sensor_status_flags();
+
+
 }
 
 // called at 50hz
